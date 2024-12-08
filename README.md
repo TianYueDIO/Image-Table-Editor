@@ -1,6 +1,6 @@
 # 说明
 
-![](https://raw.githubusercontent.com/TianYueDIO/Blogimage123/main/PixPin_2024-12-08_23-19-28.png)
+![]()
 
 这个项目是一个基于 React + TypeScript + Vite 构建的现代化表格编辑器。
 
@@ -38,3 +38,5 @@
 - 从本地文件加载表格数据
 
 - 表格截图功能
+
+## 使用方法
