@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.table-container {
+  @apply relative overflow-auto;
+}
+
+.table-zoom-container {
+  @apply inline-block transition-transform duration-200;
+}
+
+.table-zoom-container.zoom-mode {
+  @apply cursor-zoom-in;
+}
+
+.table-cell {
+  @apply border border-gray-300 p-1 align-top relative group bg-white;
+}
+
+.table-controls {
+  @apply mb-4 space-y-2;
+}
+
+.control-group {
+  @apply flex items-center gap-2 bg-gray-100 p-2 rounded;
+}
+
+.control-button {
+  @apply p-2 rounded transition-colors;
+}
+
+.control-button-primary {
+  @apply bg-blue-500 text-white hover:bg-blue-600;
+}
+
+.control-button-secondary {
+  @apply bg-white text-gray-700 hover:bg-gray-50;
+}
+
+.control-button-danger {
+  @apply bg-red-500 text-white hover:bg-red-600;
+}
+
+.control-button-success {
+  @apply bg-green-500 text-white hover:bg-green-600;
+}
+
+.control-button-disabled {
+  @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+}
