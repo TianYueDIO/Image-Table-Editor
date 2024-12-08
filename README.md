@@ -1,6 +1,6 @@
 # 说明
 
-![]()
+![](https://raw.githubusercontent.com/TianYueDIO/Blogimage123/main/PixPin_2024-12-08_23-19-28.png)
 
 这个项目是一个基于 React + TypeScript + Vite 构建的现代化表格编辑器。
 
@@ -40,3 +40,4 @@
 - 表格截图功能
 
 ## 使用方法
+首先需要下载项目的源文件。然后，打开项目文件夹并在该目录下按住 Shift 键并右键单击以打开 PowerShell 窗口。接着，依次执行 `npm install` 和 `npm run dev` 命令。一旦完成这些步骤，以后每次启动项目时只需简单地运行 `npm run dev` 即可。
