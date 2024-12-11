@@ -1,5 +1,9 @@
 import React from 'react';
-import { Save, Upload, Image as ImageIcon, Type, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Search, Maximize2, Maximize, Camera } from 'lucide-react';
+import { 
+  Save, Upload, Image as ImageIcon, Type, ChevronDown, ChevronUp, 
+  ChevronLeft, ChevronRight, Trash2, Search, Maximize2, 
+  Camera, LayoutGrid 
+} from 'lucide-react';
 import { TextFormatControls } from './TextFormatControls';
 import { EditMode, TextStyle } from '../../types/table';
 
@@ -98,7 +102,7 @@ export const TableControls: React.FC<TableControlsProps> = ({
             className="p-2 bg-white text-gray-700 rounded hover:bg-gray-50 transition-colors"
             title="重置表格大小"
           >
-            <Maximize size={20} />
+            <Maximize2 size={20} />
           </button>
         </div>
 
@@ -121,6 +125,15 @@ export const TableControls: React.FC<TableControlsProps> = ({
             title="图片模式"
           >
             <ImageIcon size={20} />
+          </button>
+          <button
+            onClick={() => onEditModeChange('layout')}
+            className={`p-2 rounded transition-colors ${
+              editMode === 'layout' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+            title="布局模式"
+          >
+            <LayoutGrid size={20} />
           </button>
         </div>
 
@@ -180,7 +193,7 @@ export const TableControls: React.FC<TableControlsProps> = ({
         </div>
       </div>
       
-      {/* 文字格式控制区 */}
+      {/* 文字格式控制区 - 只在文字模式下显示 */}
       {editMode === 'text' && (
         <div className="bg-gray-100 p-2 rounded">
           <TextFormatControls style={textStyle} onChange={onTextStyleChange} />

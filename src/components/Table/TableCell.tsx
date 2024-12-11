@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { CellContent, TextStyle, EditMode } from '../../types/table';
 import { ResizeHandle } from './ResizeHandle';
+import { TableContextMenu } from './TableContextMenu';
+import { useContextMenu } from '../../hooks/useContextMenu';
 
 interface TableCellProps {
   content?: CellContent | null;
@@ -18,6 +20,10 @@ interface TableCellProps {
   onHeightChange: (newHeight: number) => void;
   rowIndex: number;
   colIndex: number;
+  isSelected: boolean;
+  onCopySize?: () => void;
+  onPasteSize?: () => void;
+  hasCopiedSize?: boolean;
 }
 
 export const TableCell: React.FC<TableCellProps> = ({
@@ -34,11 +40,16 @@ export const TableCell: React.FC<TableCellProps> = ({
   onWidthChange,
   onHeightChange,
   rowIndex,
-  colIndex
+  colIndex,
+  isSelected,
+  onCopySize,
+  onPasteSize,
+  hasCopiedSize
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cellRef = useRef<HTMLDivElement>(null);
+  const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -59,7 +70,13 @@ export const TableCell: React.FC<TableCellProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragOverEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDragOver(e);
+  };
+
+  const handleDropEvent = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -73,19 +90,16 @@ export const TableCell: React.FC<TableCellProps> = ({
     onDrop();
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onContentChange({
-      type: 'text',
-      content: e.target.value,
-      style: content?.type === 'text' ? content.style : defaultTextStyle
-    });
-  };
-
   const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.group\\/resize')) {
       return;
     }
     
+    if (editMode === 'layout') {
+      onSelect();
+      return;
+    }
+
     if (editMode === 'image') {
       onSelect();
       return;
@@ -93,6 +107,27 @@ export const TableCell: React.FC<TableCellProps> = ({
 
     setIsEditing(true);
     onSelect();
+  };
+
+  const handleCellContextMenu = (e: React.MouseEvent) => {
+    if (editMode === 'layout') {
+      handleContextMenu(e);
+      onSelect();
+    }
+  };
+
+  const handleCopy = () => {
+    if (onCopySize) {
+      onCopySize();
+      hideContextMenu();
+    }
+  };
+
+  const handlePaste = () => {
+    if (onPasteSize && hasCopiedSize) {
+      onPasteSize();
+      hideContextMenu();
+    }
   };
 
   const handleBlur = () => {
@@ -107,34 +142,15 @@ export const TableCell: React.FC<TableCellProps> = ({
     onDragStart();
   };
 
-  const handleDragOverEvent = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onDragOver(e);
-  };
-
-  const getTextClassName = (style?: TextStyle) => {
-    if (!style) return '';
-    
-    const classes = [
-      style.align === 'center' ? 'text-center' : 
-      style.align === 'right' ? 'text-right' : 'text-left',
-      style.bold ? 'font-bold' : '',
-      style.italic ? 'italic' : '',
-      style.underline ? 'underline' : ''
-    ];
-
-    return classes.filter(Boolean).join(' ');
-  };
-
-  const getTextStyle = (style?: TextStyle) => {
-    if (!style?.size) return {};
-    return {
-      fontSize: `${style.size}px`
-    };
-  };
-
   const renderContent = () => {
+    if (editMode === 'layout') {
+      return (
+        <div className="w-full h-full flex items-center justify-center text-gray-500 select-none">
+          {width} × {height}
+        </div>
+      );
+    }
+
     if (content?.type === 'image') {
       return (
         <div 
@@ -178,12 +194,13 @@ export const TableCell: React.FC<TableCellProps> = ({
       return (
         <textarea
           ref={textareaRef}
-          className={`w-full h-full p-2 border-none resize-none focus:ring-2 focus:ring-blue-500 ${getTextClassName(
-            content?.type === 'text' ? content.style : defaultTextStyle
-          )}`}
-          style={getTextStyle(content?.type === 'text' ? content.style : defaultTextStyle)}
+          className="w-full h-full p-2 border-none resize-none focus:ring-2 focus:ring-blue-500"
           value={content?.type === 'text' ? content.content : ''}
-          onChange={handleTextChange}
+          onChange={(e) => onContentChange({
+            type: 'text',
+            content: e.target.value,
+            style: content?.type === 'text' ? content.style : defaultTextStyle
+          })}
           onBlur={handleBlur}
         />
       );
@@ -191,10 +208,7 @@ export const TableCell: React.FC<TableCellProps> = ({
 
     return (
       <div
-        className={`w-full h-full p-2 whitespace-pre-wrap break-words cursor-text ${getTextClassName(
-          content?.type === 'text' ? content.style : defaultTextStyle
-        )}`}
-        style={getTextStyle(content?.type === 'text' ? content.style : defaultTextStyle)}
+        className="w-full h-full p-2 whitespace-pre-wrap break-words cursor-text"
         onClick={handleClick}
         draggable={!!content}
         onDragStart={content ? handleDragStartEvent : undefined}
@@ -207,15 +221,18 @@ export const TableCell: React.FC<TableCellProps> = ({
   return (
     <td 
       ref={cellRef}
-      className="border border-gray-300 p-1 align-top relative group bg-white"
+      className={`border border-gray-300 p-1 align-top relative group bg-white ${
+        isSelected ? 'ring-2 ring-blue-500' : ''
+      } ${editMode === 'layout' ? 'cursor-pointer' : ''}`}
       style={{ 
         width: `${width}px`,
         height: `${height}px`,
         minWidth: '60px',
         minHeight: '30px'
       }}
+      onContextMenu={handleCellContextMenu}
       onDragOver={handleDragOverEvent}
-      onDrop={handleDrop}
+      onDrop={handleDropEvent}
       onClick={handleClick}
     >
       {renderContent()}
@@ -224,15 +241,24 @@ export const TableCell: React.FC<TableCellProps> = ({
         onResize={onWidthChange}
         currentSize={width}
         minSize={60}
-        className="opacity-0 group-hover:opacity-100"
+        className={`opacity-0 ${editMode === 'layout' ? 'group-hover:opacity-100' : ''}`}
       />
       <ResizeHandle
         type="row"
         onResize={onHeightChange}
         currentSize={height}
         minSize={30}
-        className="opacity-0 group-hover:opacity-100"
+        className={`opacity-0 ${editMode === 'layout' ? 'group-hover:opacity-100' : ''}`}
       />
+      {editMode === 'layout' && (
+        <TableContextMenu
+          isVisible={contextMenu.isVisible}
+          position={contextMenu.position}
+          onCopy={handleCopy}
+          onPaste={handlePaste}
+          hasCopiedSize={!!hasCopiedSize}
+        />
+      )}
     </td>
   );
 };

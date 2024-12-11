@@ -18,6 +18,10 @@ interface TableRowProps {
   colWidths: number[];
   onRowResize: (rowIndex: number, newHeight: number) => void;
   onColumnResize: (colIndex: number, newWidth: number) => void;
+  selectedCell?: { row: number; col: number } | null;
+  onCopySize?: () => void;
+  onPasteSize?: () => void;
+  hasCopiedSize?: boolean;
 }
 
 export const TableRow: React.FC<TableRowProps> = ({
@@ -36,6 +40,10 @@ export const TableRow: React.FC<TableRowProps> = ({
   colWidths,
   onRowResize,
   onColumnResize,
+  selectedCell,
+  onCopySize,
+  onPasteSize,
+  hasCopiedSize
 }) => {
   return (
     <tr style={{ height: `${rowHeight}px` }}>
@@ -56,6 +64,10 @@ export const TableRow: React.FC<TableRowProps> = ({
           onHeightChange={(newHeight) => onRowResize(rowIndex, newHeight)}
           rowIndex={rowIndex}
           colIndex={colIndex}
+          isSelected={selectedCell?.row === rowIndex && selectedCell?.col === colIndex}
+          onCopySize={onCopySize}
+          onPasteSize={onPasteSize}
+          hasCopiedSize={hasCopiedSize}
         />
       ))}
     </tr>

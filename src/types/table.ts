@@ -1,6 +1,6 @@
 export interface TextStyle {
   align?: 'left' | 'center' | 'right';
-  size?: number; // Changed from string to number for precise control
+  size?: number;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
@@ -10,6 +10,11 @@ export interface CellContent {
   type: 'text' | 'image';
   content: string;
   style?: TextStyle;
+}
+
+export interface TableSizeConfig {
+  rowHeights: number[];
+  colWidths: number[];
 }
 
 export interface TableData {
@@ -24,15 +29,20 @@ export interface TableData {
   };
   rowHeights: number[];
   colWidths: number[];
-  defaultCellWidth: number; // Added for consistency
-  defaultCellHeight: number; // Added for consistency
-  defaultFontSize: number; // Added for consistency
+  defaultCellWidth: number;
+  defaultCellHeight: number;
+  defaultFontSize: number;
 }
 
-export type EditMode = 'text' | 'image';
+export type EditMode = 'text' | 'image' | 'layout';
 
 export interface DragItem {
   rowIndex: number;
   colIndex: number;
   content: CellContent | null;
+}
+
+export interface SelectedCell {
+  row: number;
+  col: number;
 }

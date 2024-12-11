@@ -43,12 +43,16 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       setIsResizing(false);
-      setTimeout(() => setShowTooltip(false), 1000);
+      setTimeout(() => {
+        if (!isResizing) {
+          setShowTooltip(false);
+        }
+      }, 1000);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [type, onResize, currentSize, minSize]);
+  }, [type, onResize, currentSize, minSize, isResizing]);
 
   const handleMouseEnter = () => {
     if (!isResizing) {
@@ -82,13 +86,13 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({
             : 'h-0.5 w-full top-1/2 -translate-y-1/2'
         } bg-gray-300 group-hover/resize:bg-blue-500 transition-colors`}
       />
-      {showTooltip && (
+      {(showTooltip || isResizing) && (
         <div 
           className={`absolute ${
             type === 'column' 
               ? 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2' 
               : 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
-          } bg-gray-800 text-white text-xs rounded-lg px-2 py-1 shadow-lg whitespace-nowrap`}
+          } bg-gray-800 text-white text-xs rounded-lg px-2 py-1 shadow-lg whitespace-nowrap z-50`}
           style={{
             transform: `translate(${type === 'column' ? 'calc(-50% + 8px)' : '-50%'}, -50%)`,
           }}
