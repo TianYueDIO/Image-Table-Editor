@@ -80,14 +80,13 @@ export const TableCell: React.FC<TableCellProps> = ({
         height={height}
       />
       
-      {editMode === 'layout' && (
-        <ResizeHandles
-          width={width}
-          height={height}
-          onWidthChange={onWidthChange}
-          onHeightChange={onHeightChange}
-        />
-      )}
+      <ResizeHandles
+        width={width}
+        height={height}
+        onWidthChange={onWidthChange}
+        onHeightChange={onHeightChange}
+        showHandles={true} // 在所有模式下都显示调整大小的控件
+      />
     </td>
   );
 };

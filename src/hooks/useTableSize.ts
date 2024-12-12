@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { TableData } from '../types/table';
 
 export const useTableSize = (tableData: TableData, updateTableData: (data: TableData) => void) => {

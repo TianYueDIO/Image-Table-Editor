@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { TableControls } from './TableControls';
 import { TableRow } from './TableRow';
 import { WheelZoomControl } from './WheelZoomControl';
-import { TableData } from '../../types/table';
-import { loadTableData, saveTableData } from '../../utils/tableStorage';
-import { captureTableScreenshot, downloadScreenshot } from '../../utils/screenshot';
-import { Undo, Redo } from 'lucide-react';
-
 import { useTableHistory } from '../../hooks/useTableHistory';
 import { useTableOperations } from '../../hooks/useTableOperations';
 import { useTableZoom } from '../../hooks/useTableZoom';
 import { useTableDrag } from '../../hooks/useTableDrag';
-import { useTableResize } from '../../hooks/useTableResize';
 import { useTableContent } from '../../hooks/useTableContent';
-import { useTableSize } from '../../hooks/useTableSize';
-import { useTableShortcuts } from '../../hooks/useTableShortcuts';
+import { useTableCellSize } from '../../hooks/useTableCellSize';
+import { TableData } from '../../types/table';
+import { captureTableScreenshot, downloadScreenshot } from '../../utils/screenshot';
+import { saveTableData, loadTableData } from '../../utils/tableStorage';
 
 const DEFAULT_CELL_WIDTH = 200;
 const DEFAULT_CELL_HEIGHT = 120;
@@ -33,16 +29,15 @@ const initialTableData: TableData = {
 };
 
 export const ImageTable: React.FC = () => {
-  const [error, setError] = useState<string | null>(null);
-  
+  const tableRef = useRef<HTMLDivElement>(null);
+
   const {
     tableData,
     updateTableData,
     handleUndo,
     handleRedo,
     canUndo,
-    canRedo,
-    clearHistory
+    canRedo
   } = useTableHistory(initialTableData);
 
   const {
@@ -70,56 +65,29 @@ export const ImageTable: React.FC = () => {
   } = useTableDrag(tableData, updateTableData);
 
   const {
-    handleColumnResize,
-    handleRowResize
-  } = useTableResize(tableData, updateTableData);
-
-  const {
     editMode,
     setEditMode,
     textStyle,
+    selectedCell,
     handleContentChange,
     handleCellSelect,
     handleTextStyleChange
   } = useTableContent(tableData, updateTableData);
 
-  const {
-    copiedSize,
-    copyTableSize,
-    pasteTableSize,
-    copyStatus,
-    previewPosition,
-    showPreview
-  } = useTableSize(tableData, updateTableData);
-
-  // 使用快捷键钩子
-  useTableShortcuts(copyTableSize, pasteTableSize, !!copiedSize);
-
-  const handleScreenshot = async () => {
-    try {
-      const dataUrl = await captureTableScreenshot('table-container');
-      downloadScreenshot(dataUrl);
-    } catch (error) {
-      setError('截图失败，请稍后重试');
-      setTimeout(() => setError(null), 3000);
-    }
-  };
-
   const handleSave = () => {
     try {
       const url = saveTableData(tableData);
-      const a = document.createElement('a');
+      const link = document.createElement('a');
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      a.href = url;
-      a.download = `table-data-${timestamp}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      link.download = `table-${timestamp}.json`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      setError(null);
-    } catch (err) {
-      setError('保存表格时出错');
-      console.error('保存表格错误:', err);
+    } catch (error) {
+      console.error('保存失败:', error);
+      alert('保存失败，请重试');
     }
   };
 
@@ -130,47 +98,26 @@ export const ImageTable: React.FC = () => {
     try {
       const data = await loadTableData(file);
       updateTableData(data);
-      clearHistory();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载表格时出错');
-      console.error('加载表格错误:', err);
+    } catch (error) {
+      console.error('加载失败:', error);
+      alert('加载失败，请检查文件格式');
+    }
+  };
+
+  const handleScreenshot = async () => {
+    if (!tableRef.current) return;
+
+    try {
+      const dataUrl = await captureTableScreenshot('table-container');
+      downloadScreenshot(dataUrl);
+    } catch (error) {
+      console.error('截图失败:', error);
+      alert('截图失败，请重试');
     }
   };
 
   return (
     <div className="p-4">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={handleUndo}
-          disabled={!canUndo}
-          className={`p-2 rounded ${
-            canUndo
-              ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-          title="撤销"
-        >
-          <Undo size={20} />
-        </button>
-        <button
-          onClick={handleRedo}
-          disabled={!canRedo}
-          className={`p-2 rounded ${
-            canRedo
-              ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-          title="重做"
-        >
-          <Redo size={20} />
-        </button>
-      </div>
       <TableControls
         onAddRow={addRow}
         onAddColumn={addColumn}
@@ -181,13 +128,6 @@ export const ImageTable: React.FC = () => {
         onClearAll={clearAllContent}
         onResetTableSize={resetTableSize}
         onScreenshot={handleScreenshot}
-        onCopySize={copyTableSize}
-        onPasteSize={pasteTableSize}
-        hasCopiedSize={!!copiedSize}
-        copiedSize={copiedSize}
-        copyStatus={copyStatus}
-        showPreview={showPreview}
-        previewPosition={previewPosition}
         canRemoveRow={tableData.rows > 1}
         canRemoveColumn={tableData.cols > 1}
         editMode={editMode}
@@ -199,12 +139,13 @@ export const ImageTable: React.FC = () => {
         zoomLevel={zoom}
         onResetZoom={handleResetZoom}
       />
+
       <WheelZoomControl 
         zoom={zoom} 
         onZoomChange={setZoom}
         isZoomMode={isZoomMode}
       >
-        <div id="table-container" className="overflow-x-auto mt-4">
+        <div id="table-container" ref={tableRef} className="overflow-x-auto mt-4">
           <table className="border-collapse">
             <tbody>
               {tableData.cells.map((row, rowIndex) => (
@@ -219,14 +160,23 @@ export const ImageTable: React.FC = () => {
                   onRemoveRow={() => {}}
                   editMode={editMode}
                   defaultTextStyle={textStyle}
-                  onDragStart={handleDragStart}
+                  onDragStart={(colIndex) => handleDragStart(rowIndex, colIndex)}
                   onDragOver={handleDragOver}
-                  onDrop={handleDrop}
+                  onDrop={(colIndex) => handleDrop(rowIndex, colIndex)}
                   onCellSelect={(colIndex) => handleCellSelect(rowIndex, colIndex)}
                   rowHeight={tableData.rowHeights[rowIndex]}
                   colWidths={tableData.colWidths}
-                  onRowResize={(rowIndex, newHeight) => handleRowResize(rowIndex, newHeight)}
-                  onColumnResize={(colIndex, newWidth) => handleColumnResize(colIndex, newWidth)}
+                  onRowResize={(rowIndex, newHeight) => {
+                    const newData = { ...tableData };
+                    newData.rowHeights[rowIndex] = newHeight;
+                    updateTableData(newData);
+                  }}
+                  onColumnResize={(colIndex, newWidth) => {
+                    const newData = { ...tableData };
+                    newData.colWidths[colIndex] = newWidth;
+                    updateTableData(newData);
+                  }}
+                  selectedCell={selectedCell}
                 />
               ))}
             </tbody>

@@ -6,14 +6,18 @@ interface ResizeHandlesProps {
   height: number;
   onWidthChange: (newWidth: number) => void;
   onHeightChange: (newHeight: number) => void;
+  showHandles?: boolean;
 }
 
 export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
   width,
   height,
   onWidthChange,
-  onHeightChange
+  onHeightChange,
+  showHandles = true
 }) => {
+  if (!showHandles) return null;
+
   return (
     <>
       <ResizeHandle

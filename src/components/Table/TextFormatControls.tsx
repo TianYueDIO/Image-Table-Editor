@@ -10,6 +10,7 @@ import {
   Plus
 } from 'lucide-react';
 import { TextStyle } from '../../types/table';
+import { LongPressButton } from '../Common/LongPressButton';
 
 interface TextFormatControlsProps {
   style: TextStyle;
@@ -57,13 +58,12 @@ export const TextFormatControls: React.FC<TextFormatControlsProps> = ({
       </div>
       
       <div className="flex items-center gap-1 border-r pr-1">
-        <button
-          className="p-1 rounded hover:bg-gray-100"
+        <LongPressButton
           onClick={() => handleFontSizeChange(-1)}
-          title="减小字号"
+          className="p-1 rounded hover:bg-gray-100"
         >
           <Minus size={16} />
-        </button>
+        </LongPressButton>
         <input
           type="number"
           className="w-16 px-1 py-0.5 border rounded text-center"
@@ -76,13 +76,12 @@ export const TextFormatControls: React.FC<TextFormatControlsProps> = ({
           max="72"
           title="字号"
         />
-        <button
-          className="p-1 rounded hover:bg-gray-100"
+        <LongPressButton
           onClick={() => handleFontSizeChange(1)}
-          title="增大字号"
+          className="p-1 rounded hover:bg-gray-100"
         >
           <Plus size={16} />
-        </button>
+        </LongPressButton>
       </div>
 
       <div className="flex gap-1">

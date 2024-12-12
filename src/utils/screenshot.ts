@@ -21,30 +21,45 @@ export const captureTableScreenshot = async (tableId: string): Promise<string> =
     clone.style.backgroundColor = '#ffffff';
     clone.style.padding = '0';
     clone.style.margin = '0';
+    clone.style.width = 'auto';
+    clone.style.height = 'auto';
 
-    // 处理表格样式
+    // 只保留表格元素
     const table = clone.querySelector('table');
     if (table) {
+      // 清空容器并只添加表格
+      clone.innerHTML = '';
+      clone.appendChild(table);
+      
       table.style.borderCollapse = 'collapse';
       table.style.backgroundColor = '#ffffff';
+      table.style.width = 'auto';
+      table.style.height = 'auto';
       
       // 处理所有单元格
       const cells = table.querySelectorAll('td');
       cells.forEach(td => {
-        td.style.backgroundColor = '#ffffff';
-        td.style.border = '1px solid #d1d5db';
+        const cell = td as HTMLElement;
+        cell.style.backgroundColor = '#ffffff';
+        cell.style.border = '1px solid #d1d5db';
         
-        // 移除不需要的元素
-        const resizeHandles = td.querySelectorAll('.resize-handle, .group\\/resize');
+        // 移除调整大小的控件
+        const resizeHandles = cell.querySelectorAll('.group\\/resize');
         resizeHandles.forEach(handle => handle.remove());
         
-        // 移除空单元格提示文字
-        const emptyLabels = td.querySelectorAll('label');
+        // 移除空单元格提示
+        const emptyLabels = cell.querySelectorAll('label');
         emptyLabels.forEach(label => {
           if (!label.querySelector('img')) {
             label.remove();
           }
         });
+
+        // 确保内容可见
+        const content = cell.querySelector('div');
+        if (content) {
+          (content as HTMLElement).style.opacity = '1';
+        }
       });
     }
 
@@ -58,11 +73,12 @@ export const captureTableScreenshot = async (tableId: string): Promise<string> =
       quality: 1.0,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
+      style: {
+        transform: 'none'
+      },
       filter: (node) => {
         const element = node as HTMLElement;
-        // 过滤掉调整大小的控件和空单元格提示
-        return !element.classList?.contains('resize-handle') &&
-               !element.classList?.contains('group/resize') &&
+        return !element.classList?.contains('group/resize') &&
                !(element.tagName === 'LABEL' && !element.querySelector('img'));
       }
     });
